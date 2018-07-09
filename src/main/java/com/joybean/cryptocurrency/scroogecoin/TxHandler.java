@@ -1,4 +1,4 @@
-package com.joybean.cryptocurrency;
+package com.joybean.cryptocurrency.scroogecoin;
 
 import java.util.HashSet;
 import java.util.Set;

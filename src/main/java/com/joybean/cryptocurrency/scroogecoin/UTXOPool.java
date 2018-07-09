@@ -1,4 +1,4 @@
-package com.joybean.cryptocurrency;
+package com.joybean.cryptocurrency.scroogecoin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
