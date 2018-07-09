@@ -5,20 +5,18 @@ import java.util.Set;
 
 /* CompliantNode refers to a node that follows the rules (not malicious)*/
 public class CompliantNode implements Node {
-    private double pgraph;
-    private double pmalicous;
-    private double ptxDistribution;
     private int numRounds;
     private int currentRound;
     private boolean[] followees;
     private Set<Transaction> pendingTransactions;
-    private static Set<Transaction> allSentTransactions = new HashSet<>();
+    //Transactions that all compliantNode initialized
+    private static Set<Transaction> allCompliantTransactions = new HashSet<>();
+    //Store transactions that current node has sent in order to improve efficiency
+    // Current node will send a transaction to its followers once among all rounds
     private Set<Transaction> currentSentTransactions = new HashSet<>();
+    private Set<Integer> maliciousNode = new HashSet<>();
 
     public CompliantNode(double p_graph, double p_malicious, double p_txDistribution, int numRounds) {
-        this.pgraph = p_graph;
-        this.pmalicous = p_malicious;
-        this.ptxDistribution = p_txDistribution;
         this.numRounds = numRounds;
     }
 
@@ -28,7 +26,7 @@ public class CompliantNode implements Node {
 
     public void setPendingTransaction(Set<Transaction> pendingTransactions) {
         this.pendingTransactions = pendingTransactions;
-        allSentTransactions.addAll(pendingTransactions);
+        allCompliantTransactions.addAll(pendingTransactions);
     }
 
     public Set<Transaction> sendToFollowers() {
@@ -43,8 +41,23 @@ public class CompliantNode implements Node {
     }
 
     public void receiveFromFollowees(Set<Candidate> candidates) {
+        Set<Integer> senders = new HashSet<>();
         for (Candidate candidate : candidates) {
-            if (followees[candidate.sender] && allSentTransactions.contains(candidate.tx) && !currentSentTransactions.contains(candidate.tx)) {
+            senders.add(candidate.sender);
+            //The node whose transaction is not included in allCompliantTransactions will be treated as malicious node.
+            //No need to check candidate.sender is the followee of current node,because Simulation has handled it.
+            if (!allCompliantTransactions.contains(candidate.tx)) {
+                maliciousNode.add(candidate.sender);
+            }
+        }
+        for (int i = 0; i < followees.length; i++) {
+            //The followee who doesn't provide candidate in a round will be treated as malicious node
+            if (!senders.contains(i))
+                maliciousNode.add(i);
+        }
+        for (Candidate candidate : candidates) {
+            //Only add transaction that isn't provided by malicious node and hasn't been sent ever
+            if (!maliciousNode.contains(candidate.sender) && !currentSentTransactions.contains(candidate.tx)) {
                 pendingTransactions.add(candidate.tx);
             }
         }
